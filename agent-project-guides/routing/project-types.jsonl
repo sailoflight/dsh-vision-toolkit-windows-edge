@@ -1,0 +1,7 @@
+{"id":"mcp","when":"Primary deliverable is an MCP server, gateway, or tool provider","profile":"profiles/MCP_PROJECT.md"}
+{"id":"library","when":"Primary deliverable is an importable library, SDK, or reusable package","profile":"profiles/LIBRARY_PROJECT.md"}
+{"id":"cli","when":"Primary deliverable is a command-line executable and command contract","profile":"profiles/CLI_PROJECT.md"}
+{"id":"service","when":"Primary deliverable is a long-running API, worker, daemon, scheduler, or backend runtime","profile":"profiles/SERVICE_PROJECT.md"}
+{"id":"application-ui","when":"Primary deliverable is an interactive web, desktop, or mobile UI","profile":"profiles/APPLICATION_UI_PROJECT.md"}
+{"id":"data-automation","when":"Primary deliverable is a data pipeline, batch job, script, dataset, or workflow automation","profile":"profiles/DATA_AUTOMATION_PROJECT.md"}
+{"id":"monorepo","when":"Current scope is a repository root coordinating multiple independently governed packages or projects","profile":"profiles/MONOREPO_PROJECT.md"}

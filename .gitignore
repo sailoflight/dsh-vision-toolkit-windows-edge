@@ -4,3 +4,12 @@ __pycache__/
 logs/
 token
 config.json
+
+# --- local hygiene (sailoflight migration) ---
+.venv/
+__pycache__/
+*.pyc
+.cache/
+.claude/
+TESTWORKTREE/
+

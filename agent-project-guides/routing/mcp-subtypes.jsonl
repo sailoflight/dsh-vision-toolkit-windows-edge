@@ -1,0 +1,1 @@
+{"id":"windows-wsl-bridge","when":"MCP clients run in WSL/Linux while a Windows engine owns native resources and persistent runtime state","spec":"profiles/mcp/WINDOWS_WSL_BRIDGE.md"}
