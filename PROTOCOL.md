@@ -105,7 +105,7 @@ schemes allowed. A hard timeout kills the worker and Edge process tree.
 ## Deployment handoff
 
 1. Modify and syntax-test the WSL source tree.
-2. Run `install.sh`; it stops the old task/listener and copies Windows sources.
+2. Run `install.sh`; it synchronizes every existing supported DSH profile, stops the old task/listener, and copies Windows sources.
 3. `setup-runtime.ps1` creates/updates the plugin-owned Windows `.venv` without
    downloading a browser.
 4. `register-task.ps1` registers `DshVisionToolkitWindowsEdge` with its private

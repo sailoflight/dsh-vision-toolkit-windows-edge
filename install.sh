@@ -2,9 +2,9 @@
 set -euo pipefail
 
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WEB="$HOME/.dsh/profiles/web"
-PLUGIN="$WEB/plugins/vision-toolkit-windows-edge"
-OLD_PLUGIN="$WEB/plugins/wsl-edge-bridge"
+PROFILE_NAMES=(web dsh-tui headless)
+TARGET_PROFILES=()
+PROFILES_ROOT="$HOME/.dsh/profiles"
 STATE="$HOME/.dsh/vision-toolkit-windows-edge"
 OLD_STATE="$HOME/.dsh/wsl-edge-bridge"
 WIN="/mnt/c/MCP/dsh-vision-toolkit-windows-edge"
@@ -12,7 +12,15 @@ OLD_WIN="/mnt/c/MCP/dsh-wsl-edge-bridge"
 PORT=8767
 PS='/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe'
 
-[ -d "$WEB" ] || { echo "missing Web profile: $WEB" >&2; exit 1; }
+for name in "${PROFILE_NAMES[@]}"; do
+  profile="$PROFILES_ROOT/$name"
+  if [ -d "$profile" ]; then
+    TARGET_PROFILES+=("$name")
+  else
+    echo "skipping missing DSH profile: $profile"
+  fi
+done
+[ "${#TARGET_PROFILES[@]}" -gt 0 ] || { echo "no supported DSH profiles found under $PROFILES_ROOT" >&2; exit 1; }
 [ -n "${WSL_DISTRO_NAME:-}" ] || { echo "WSL_DISTRO_NAME is not set" >&2; exit 1; }
 [ -x "$PS" ] || { echo "Windows PowerShell is unavailable" >&2; exit 1; }
 
@@ -32,7 +40,7 @@ echo "stage: stop old runtime"
 echo "stage: migrate deployment"
 if [ ! -d "$WIN" ] && [ -d "$OLD_WIN" ]; then mv "$OLD_WIN" "$WIN"; fi
 if [ ! -d "$STATE" ] && [ -d "$OLD_STATE" ]; then mv "$OLD_STATE" "$STATE"; fi
-mkdir -p "$PLUGIN" "$STATE" "$WIN/logs"
+mkdir -p "$STATE" "$WIN/logs"
 
 token=''
 for candidate in "$WIN/token" "$STATE/token" "$OLD_WIN/token" "$OLD_STATE/token"; do
@@ -42,9 +50,15 @@ if [ -z "$token" ]; then
   token="$(node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('base64url'))")"
 fi
 
-rm -rf "$OLD_PLUGIN" "$OLD_STATE"
+rm -rf "$OLD_STATE"
 [ "$OLD_WIN" = "$WIN" ] || rm -rf "$OLD_WIN"
-cp -R "$SRC/plugin/." "$PLUGIN/"
+for name in "${TARGET_PROFILES[@]}"; do
+  profile="$PROFILES_ROOT/$name"
+  plugin="$profile/plugins/vision-toolkit-windows-edge"
+  rm -rf "$plugin" "$profile/plugins/wsl-edge-bridge"
+  mkdir -p "$plugin"
+  cp -R "$SRC/plugin/." "$plugin/"
+done
 cp "$SRC/windows/bridge_server.py" \
    "$SRC/windows/render_worker.py" \
    "$SRC/windows/start-bridge.ps1" \
@@ -71,8 +85,8 @@ with open(path, "w", encoding="utf-8") as stream:
     stream.write("\n")
 PYCONFIG
 
-echo "stage: update profile patch"
-python3 - "$WEB/cordis.patch.yml" <<'PYPATCH'
+update_patch() {
+  python3 - "$1" <<'PYPATCH'
 import os, re, sys, tempfile
 path = sys.argv[1]
 with open(path, encoding="utf-8") as stream:
@@ -131,6 +145,12 @@ finally:
     if os.path.exists(temporary):
         os.unlink(temporary)
 PYPATCH
+}
+
+echo "stage: update profile patches"
+for name in "${TARGET_PROFILES[@]}"; do
+  update_patch "$PROFILES_ROOT/$name/cordis.patch.yml"
+done
 
 echo "stage: setup private Windows runtime"
 SETUP="$(wslpath -w "$WIN/setup-runtime.ps1")"
@@ -138,4 +158,4 @@ REGISTER="$(wslpath -w "$WIN/register-task.ps1")"
 "$PS" -NoProfile -ExecutionPolicy Bypass -File "$SETUP"
 echo "stage: register hidden scheduled task"
 "$PS" -NoProfile -ExecutionPolicy Bypass -File "$REGISTER" -Port "$PORT"
-echo "installed dsh-vision-toolkit-windows-edge; restart dsh web"
+echo "installed dsh-vision-toolkit-windows-edge for profiles: ${TARGET_PROFILES[*]}"

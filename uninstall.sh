@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-WEB="$HOME/.dsh/profiles/web"
+PROFILE_NAMES=(web dsh-tui headless)
+PROFILES_ROOT="$HOME/.dsh/profiles"
 WIN="/mnt/c/MCP/dsh-vision-toolkit-windows-edge"
 OLD_WIN="/mnt/c/MCP/dsh-wsl-edge-bridge"
 PS='/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe'
@@ -16,15 +17,21 @@ if [ -x "$PS" ]; then
     if($c){Stop-Process -Id $c.OwningProcess -Force}
   ' || true
 fi
-rm -rf "$WEB/plugins/vision-toolkit-windows-edge" \
-       "$WEB/plugins/wsl-edge-bridge" \
-       "$HOME/.dsh/vision-toolkit-windows-edge" \
+for name in "${PROFILE_NAMES[@]}"; do
+  profile="$PROFILES_ROOT/$name"
+  rm -rf "$profile/plugins/vision-toolkit-windows-edge" "$profile/plugins/wsl-edge-bridge"
+done
+rm -rf "$HOME/.dsh/vision-toolkit-windows-edge" \
        "$HOME/.dsh/wsl-edge-bridge" \
        "$WIN" "$OLD_WIN"
 rm -f "$HOME/.local/bin/microsoft-edge"
-python3 - "$WEB/cordis.patch.yml" <<'PY'
+
+remove_patch() {
+  python3 - "$1" <<'PY'
 import os, re, sys, tempfile
 path = sys.argv[1]
+if not os.path.exists(path):
+    raise SystemExit(0)
 with open(path, encoding="utf-8") as stream:
     lines = stream.readlines()
 ids = {"vision-toolkit-windows-edge", "wsl-edge-bridge"}
@@ -58,3 +65,8 @@ finally:
     if os.path.exists(temporary):
         os.unlink(temporary)
 PY
+}
+
+for name in "${PROFILE_NAMES[@]}"; do
+  remove_patch "$PROFILES_ROOT/$name/cordis.patch.yml"
+done
