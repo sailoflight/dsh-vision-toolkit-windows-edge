@@ -1,0 +1,2 @@
+{"id":"user","aliases":["end user","product user","用户","最终用户"],"plane":"production","when":"Use public UI, API, SDK, CLI, or MCP capabilities for a user/business result","guide":"roles/production/USER.md","modes":["end-user","api-sdk","cli","mcp"]}
+{"id":"operator","aliases":["production operator","运维者","生产运维"],"plane":"production","when":"Deploy, configure, observe, respond, back up, recover, or roll back production","guide":"roles/production/OPERATOR.md","modes":["deploy-configure","observe-health","incident","backup-recovery","rollback"]}
